@@ -1,0 +1,1 @@
+To extract  ORACLE inserts stms from MSSQL databases 
