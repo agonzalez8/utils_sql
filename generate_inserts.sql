@@ -40,9 +40,9 @@ BEGIN
 
 /***********************************************************************************************************
 Procedure:	sp_generate_inserts  (Build 22) 
-		(Copyright © 2002 Narayana Vyas Kondreddi. All rights reserved.)
+		(Copyright  2002 Narayana Vyas Kondreddi. All rights reserved.)
                                           
-Purpose:	To generate INSERT statements from existing data. 
+Purpose:	To generate ORACLE INSERT statements from existing data. 
 		These INSERTS can be executed to regenerate the data at some other location.
 		This procedure is also useful to create a database setup, where in you can 
 		script your data along with your table definitions.
@@ -215,11 +215,11 @@ SET @Actual_Values = ''
 
 IF @owner IS NULL 
 	BEGIN
-		SET @Start_Insert = 'INSERT INTO ' + '[' + RTRIM(COALESCE(@target_table,@table_name)) + ']' 
+		SET @Start_Insert = 'INSERT INTO ' + '' + RTRIM(COALESCE(@target_table,@table_name)) + '' 
 	END
 ELSE
 	BEGIN
-		SET @Start_Insert = 'INSERT ' + '[' + LTRIM(RTRIM(@owner)) + '].' + '[' + RTRIM(COALESCE(@target_table,@table_name)) + ']' 		
+		SET @Start_Insert = 'INSERT ' + '' + LTRIM(RTRIM(@owner)) + '.' + '' + RTRIM(COALESCE(@target_table,@table_name)) + '' 		
 	END
 
 
@@ -235,7 +235,7 @@ WHERE 	TABLE_NAME = @table_name AND
 --Loop through all the columns of the table, to get the column names and their data types
 WHILE @Column_ID IS NOT NULL
 	BEGIN
-		SELECT 	@Column_Name = QUOTENAME(COLUMN_NAME), 
+		SELECT 	@Column_Name = QUOTENAME(UPPER(COLUMN_NAME),'"'), 
 		@Data_Type = DATA_TYPE 
 		FROM 	INFORMATION_SCHEMA.COLUMNS (NOLOCK) 
 		WHERE 	ORDINAL_POSITION = @Column_ID AND 
@@ -301,16 +301,16 @@ WHILE @Column_ID IS NOT NULL
 		CASE 
 			WHEN @Data_Type IN ('char','varchar','nchar','nvarchar') 
 				THEN 
-					'COALESCE('''''''' + REPLACE(RTRIM(' + @Column_Name + '),'''''''','''''''''''')+'''''''',''NULL'')'
+					'COALESCE('''''''' + REPLACE(REPLACE(REPLACE(SUBSTRING(RTRIM(' + @Column_Name + '),1,2000),'''''''',''''''''''''), CHAR(13), ''*''), CHAR(10), ''*'')+'''''''',''NULL'')'
 			WHEN @Data_Type IN ('datetime','smalldatetime') 
 				THEN 
-					'COALESCE('''''''' + RTRIM(CONVERT(char,' + @Column_Name + ',109))+'''''''',''NULL'')'
+					'COALESCE(''TO_DATE(''+''''''''+RTRIM(CONVERT(char,' + @Column_Name + ',120))+''''''''+'',''+''''''''+''YYYY-MM-DD HH24:MI:SS''+''''''''+'')'',''NULL'')'
 			WHEN @Data_Type IN ('uniqueidentifier') 
 				THEN  
 					'COALESCE('''''''' + REPLACE(CONVERT(char(255),RTRIM(' + @Column_Name + ')),'''''''','''''''''''')+'''''''',''NULL'')'
 			WHEN @Data_Type IN ('text','ntext') 
 				THEN  
-					'COALESCE('''''''' + REPLACE(CONVERT(char(8000),' + @Column_Name + '),'''''''','''''''''''')+'''''''',''NULL'')'					
+					'COALESCE('''''''' + REPLACE(REPLACE(REPLACE(CONVERT(char(8000),' + @Column_Name + '),'''''''',''''''''''''), CHAR(13), ''*''), CHAR(10), ''*'')+'''''''',''NULL'')'					
 			WHEN @Data_Type IN ('binary','varbinary') 
 				THEN  
 					'COALESCE(RTRIM(CONVERT(char,' + 'CONVERT(int,' + @Column_Name + '))),''NULL'')'  
@@ -349,6 +349,7 @@ WHILE @Column_ID IS NOT NULL
 SET @Column_List = LEFT(@Column_List,len(@Column_List) - 1)
 SET @Actual_Values = LEFT(@Actual_Values,len(@Actual_Values) - 6)
 
+
 IF LTRIM(@Column_List) = '' 
 	BEGIN
 		RAISERROR('No columns to select. There should at least be one column to generate the output',16,1)
@@ -364,7 +365,7 @@ IF (@include_column_list <> 0)
 			'''' + RTRIM(@Start_Insert) + 
 			' ''+' + '''(' + RTRIM(@Column_List) +  '''+' + ''')''' + 
 			' +''VALUES(''+ ' +  @Actual_Values  + '+'')''' + ' ' + 
-			COALESCE(@from,' FROM ' + CASE WHEN @owner IS NULL THEN '' ELSE '[' + LTRIM(RTRIM(@owner)) + '].' END + '[' + rtrim(@table_name) + ']' + '(NOLOCK)')
+			COALESCE(@from,' FROM ' + CASE WHEN @owner IS NULL THEN '' ELSE '' + LTRIM(RTRIM(@owner)) + '.' END + '' + rtrim(@table_name) + '' + '(NOLOCK)')
 	END
 ELSE IF (@include_column_list = 0)
 	BEGIN
@@ -373,7 +374,7 @@ ELSE IF (@include_column_list = 0)
 			CASE WHEN @top IS NULL OR @top < 0 THEN '' ELSE ' TOP ' + LTRIM(STR(@top)) + ' ' END + 
 			'''' + RTRIM(@Start_Insert) + 
 			' '' +''VALUES(''+ ' +  @Actual_Values + '+'')''' + ' ' + 
-			COALESCE(@from,' FROM ' + CASE WHEN @owner IS NULL THEN '' ELSE '[' + LTRIM(RTRIM(@owner)) + '].' END + '[' + rtrim(@table_name) + ']' + '(NOLOCK)')
+			COALESCE(@from,' FROM ' + CASE WHEN @owner IS NULL THEN '' ELSE '' + LTRIM(RTRIM(@owner)) + '.' END + '' + rtrim(@table_name) + '' + '(NOLOCK)')
 	END	
 
 --Determining whether to ouput any debug information
@@ -426,11 +427,14 @@ IF @disable_constraints = 1 AND (OBJECT_ID(QUOTENAME(COALESCE(@owner,USER_NAME()
 	END
 
 PRINT ''
-PRINT 'PRINT ''Inserting values into ' + '[' + RTRIM(COALESCE(@target_table,@table_name)) + ']' + ''''
+PRINT 'PRINT ''Inserting values into ' + '' + RTRIM(COALESCE(@target_table,@table_name)) + '' + ''''
 
 
 --All the hard work pays off here!!! You'll get your INSERT statements, when the next line executes!
 EXEC (@Actual_Values)
+
+
+
 
 PRINT 'PRINT ''Done'''
 PRINT ''
