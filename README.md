@@ -9,6 +9,6 @@ This code has been used in production env with the following limitations:
 3. It does not work with CLOB.
 
 
-By the way It can reduce your work. 
+By the way It could reduce your work. 
 
 
