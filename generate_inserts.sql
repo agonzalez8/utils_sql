@@ -55,12 +55,13 @@ Acknowledgements:
 		Mark Charsley	-- For reporting a problem with scripting uniqueidentifier columns with NULL values
 		Artur Zeygman	-- For helping me simplify a bit of code for handling non-dbo owned tables
 		Joris Laperre   -- For reporting a regression bug in handling text/ntext columns
+		Antonio Gonzalez -- For Generate ORACLE SQL STMT instead of SQL SERVER STMT
 
-Tested on: 	SQL Server 7.0 and SQL Server 2000
+Tested on: 	SQL Server 7.0 and SQL Server 2000 and Oracle 10g
 
 Date created:	January 17th 2001 21:52 GMT
 
-Date modified:	May 1st 2002 19:50 GMT
+Date modified:	Oct 22 2015 07:13 GMT
 
 Email: 		vyaskn@hotmail.com
 
